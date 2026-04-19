@@ -45,4 +45,13 @@ def extract_dates_from_html(html: str) -> list[datetime]:
         if d:
             out.append(d)
 
-    return out
+    # Dedupe by (year, month, day) — keep first occurrence
+    seen = set()
+    deduped: list[datetime] = []
+    for d in out:
+        key = (d.year, d.month, d.day)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(d)
+    return deduped

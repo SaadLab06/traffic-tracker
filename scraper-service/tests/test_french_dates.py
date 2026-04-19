@@ -25,3 +25,16 @@ def test_extract_dates_from_jsonld():
     '''
     dates = extract_dates_from_html(html)
     assert any(d.year == 2025 and d.month == 2 for d in dates)
+
+def test_extract_dates_dedupes_same_day_across_sources():
+    html = '''
+    <article><time datetime="2025-03-10T10:00:00Z">10 mars 2025</time></article>
+    <script type="application/ld+json">{"@type":"Article","datePublished":"2025-03-10T10:00:00Z"}</script>
+    <p>Article publié le 10 mars 2025</p>
+    '''
+    dates = extract_dates_from_html(html)
+    day_keys = {(d.year, d.month, d.day) for d in dates}
+    # All three sources mention 2025-03-10 — result should have exactly one entry for that day
+    assert (2025, 3, 10) in day_keys
+    count_march_10 = sum(1 for d in dates if (d.year, d.month, d.day) == (2025, 3, 10))
+    assert count_march_10 == 1
