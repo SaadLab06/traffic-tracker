@@ -10,6 +10,8 @@ def _user_agent() -> str:
 def jittered_delay_seconds() -> float:
     lo = int(os.getenv("SCRAPE_DELAY_MIN_MS", "2000")) / 1000
     hi = int(os.getenv("SCRAPE_DELAY_MAX_MS", "7000")) / 1000
+    if lo > hi:
+        lo, hi = hi, lo
     return random.uniform(lo, hi)
 
 class RetryableHTTPError(Exception):

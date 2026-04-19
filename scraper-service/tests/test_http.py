@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 import respx
 import httpx
@@ -16,6 +15,16 @@ async def test_fetch_with_retry_success():
 async def test_fetch_with_retry_retries_on_500_then_succeeds():
     route = respx.get("https://example.fr/feed").mock(
         side_effect=[httpx.Response(500), httpx.Response(200, text="ok")]
+    )
+    text = await fetch_with_retry("https://example.fr/feed")
+    assert text == "ok"
+    assert route.call_count == 2
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_fetch_with_retry_retries_on_429_then_succeeds():
+    route = respx.get("https://example.fr/feed").mock(
+        side_effect=[httpx.Response(429), httpx.Response(200, text="ok")]
     )
     text = await fetch_with_retry("https://example.fr/feed")
     assert text == "ok"
