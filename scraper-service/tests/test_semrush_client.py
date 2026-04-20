@@ -2,7 +2,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from app.services.semrush_client import get_traffic_6m
 
-FAKE_RESPONSE = {"monthly_organic_traffic": [8200, 6100, 4800, 3200, 2100, 1200]}
+# Semrush returns newest-first in the API payload
+FAKE_RESPONSE = {"monthly_organic_traffic": [1200, 2100, 3200, 4800, 6100, 8200]}
 
 
 @pytest.mark.asyncio
@@ -36,3 +37,15 @@ async def test_missing_api_key_returns_empty(tmp_path, monkeypatch):
     monkeypatch.delenv("SEMRUSH_API_KEY", raising=False)
     traffic = await get_traffic_6m("example.fr", cache_dir=tmp_path)
     assert traffic == []
+
+
+@pytest.mark.asyncio
+async def test_traffic_reversed_to_oldest_first(tmp_path, monkeypatch):
+    """Semrush returns newest-first; we must reverse to oldest-first for classify_trend."""
+    monkeypatch.setenv("SEMRUSH_API_KEY", "k")
+    # API returns newest (leftmost) → oldest (rightmost)
+    api_response = {"monthly_organic_traffic": [1200, 2100, 3200, 4800, 6100, 8200]}
+    with patch("app.services.semrush_client._call_semrush", AsyncMock(return_value=api_response)):
+        traffic = await get_traffic_6m("example.fr", cache_dir=tmp_path)
+    # After reversal: oldest=8200 first, newest=1200 last
+    assert traffic == [8200, 6100, 4800, 3200, 2100, 1200]

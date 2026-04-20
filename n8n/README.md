@@ -16,3 +16,7 @@ Manually trigger (Execute Workflow). Confirm Stage 0 tags propagate to the sheet
 
 ## Error branches
 Both IF nodes have a `false` branch left dangling — n8n will stop the item silently there. To persist failures, extend `Write Back` to accept `ERROR: <reason>` by listening on the `false` branch of `Keep Candidates` and writing `Statut scraping = "ERROR: stage1 eliminated"`.
+
+## Changelog
+
+- **v0.1.1** — Merged marketplace verdict into Stage 2 enrichment; removed broken `Batch 10` node; route Stage 1 via `Merge Marketplace + Activity` Code node; filter now also keeps `marketplace_verdict = FOR_SALE` rows even if Stage 1 eliminated them.

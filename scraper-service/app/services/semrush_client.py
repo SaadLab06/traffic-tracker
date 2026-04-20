@@ -48,7 +48,8 @@ async def get_traffic_6m(domain: str, cache_dir: Path | str = ".cache/semrush") 
         return cached
     try:
         data = await _call_semrush(domain, api_key)
-        traffic = list(data.get("monthly_organic_traffic", []))[:6]
+        # Semrush API returns newest-first; downstream classify_trend expects oldest-first
+        traffic = list(reversed(list(data.get("monthly_organic_traffic", []))[:6]))
         cache.set(key, traffic)
         return traffic
     except Exception:

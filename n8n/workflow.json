@@ -56,7 +56,7 @@
         "method": "POST",
         "url": "={{$env.SCRAPER_BASE}}/check-marketplaces",
         "sendBody": true, "contentType": "json",
-        "jsonBody": "={\n  \"urls\": {{$json.urls}}\n}"
+        "jsonBody": "={\n  \"urls\": {{JSON.stringify($json.urls)}}\n}"
       },
       "id": "n-market",
       "name": "Stage 0.5 Marketplaces",
@@ -65,34 +65,37 @@
       "position": [ 1100, 260 ]
     },
     {
-      "parameters": { "batchSize": 10 },
-      "id": "n-split",
-      "name": "Batch 10",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [ 1300, 260 ]
-    },
-    {
       "parameters": {
         "method": "POST",
         "url": "={{$env.SCRAPER_BASE}}/check-activity",
         "sendBody": true, "contentType": "json",
-        "jsonBody": "={\n  \"urls\": {{$json.urls}}\n}"
+        "jsonBody": "={\n  \"urls\": {{JSON.stringify(($json.body || $json).map(x => x.url))}}\n}"
       },
       "id": "n-activity",
       "name": "Stage 1 Activity",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "position": [ 1300, 260 ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge Stage 0.5 marketplace results with Stage 1 activity results by URL.\n// Stage 0.5 response is available at $('Stage 0.5 Marketplaces').first().json (array).\nconst marketplace = $('Stage 0.5 Marketplaces').first().json;\nconst marketArr = Array.isArray(marketplace) ? marketplace : (marketplace.body || []);\nconst marketByUrl = Object.fromEntries(marketArr.map(m => [m.url, m]));\n\nconst stage1Response = $input.first().json;\nconst stage1Arr = Array.isArray(stage1Response) ? stage1Response : (stage1Response.body || []);\n\nreturn stage1Arr.map(row => {\n  const mk = marketByUrl[row.url] || { marketplace_verdict: 'NOT_LISTED' };\n  return { json: { ...row, marketplace_verdict: mk.marketplace_verdict, dotmarket_url: mk.dotmarket_url, flippa_url: mk.flippa_url } };\n});"
+      },
+      "id": "n-merge",
+      "name": "Merge Marketplace + Activity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [ 1500, 260 ]
     },
     {
       "parameters": {
-        "conditions": { "conditions": [
-          { "leftValue": "={{$json.stage1_verdict}}", "rightValue": "CANDIDATE", "operator": { "type": "string", "operation": "equals" } }
+        "conditions": { "combinator": "or", "conditions": [
+          { "leftValue": "={{$json.stage1_verdict}}", "rightValue": "CANDIDATE", "operator": { "type": "string", "operation": "equals" } },
+          { "leftValue": "={{$json.marketplace_verdict}}", "rightValue": "FOR_SALE", "operator": { "type": "string", "operation": "equals" } }
         ] }
       },
       "id": "n-filter1",
-      "name": "Keep Candidates",
+      "name": "Keep Candidates or FOR_SALE",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [ 1700, 260 ]
@@ -102,7 +105,7 @@
         "method": "POST",
         "url": "={{$env.SCRAPER_BASE}}/check-traffic",
         "sendBody": true, "contentType": "json",
-        "jsonBody": "={\n  \"urls\": [{{$json.url}}],\n  \"enrichment\": {\n    \"{{$json.url}}\": {\n      \"stage1_score\": {{$json.stage1_score}},\n      \"marketplace_verdict\": \"{{$json.marketplace_verdict || 'NOT_LISTED'}}\"\n    }\n  }\n}"
+        "jsonBody": "={\n  \"urls\": [{{JSON.stringify($json.url)}}],\n  \"enrichment\": {\n    {{JSON.stringify($json.url)}}: {\n      \"stage1_score\": {{$json.stage1_score}},\n      \"marketplace_verdict\": {{JSON.stringify($json.marketplace_verdict || 'NOT_LISTED')}}\n    }\n  }\n}"
       },
       "id": "n-traffic",
       "name": "Stage 2 Traffic",
@@ -112,13 +115,23 @@
     },
     {
       "parameters": {
+        "jsCode": "// Flatten /check-traffic's list response (always 1 URL here) back to single item.\nconst resp = $input.first().json;\nconst arr = Array.isArray(resp) ? resp : (resp.body || []);\nreturn arr.map(x => ({ json: x }));"
+      },
+      "id": "n-flatten",
+      "name": "Flatten Traffic Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 2050, 260 ]
+    },
+    {
+      "parameters": {
         "documentId": { "__rl": true, "mode": "list", "value": "SHEET_ID" },
         "sheetName": { "__rl": true, "mode": "list", "value": "Sheet1" },
         "operation": "update",
         "columns": { "mappingMode": "defineBelow",
           "value": {
             "Site web": "={{$json.url}}",
-            "Statut scraping": "={{ $json.stage1_verdict === 'ERROR' ? ('ERROR: ' + ($json.error || 'unknown')) : ('S1: ' + $json.stage1_verdict + ' (' + $json.stage1_score + ')') }}",
+            "Statut scraping": "={{ $json.stage2_verdict === 'ERROR' ? ('ERROR: ' + ($json.error || 'unknown')) : ('S2: ' + $json.stage2_verdict + ' (' + $json.priority_score + ')') }}",
             "Check Semrush (intéressant pour racheter?)": "={{ $json.priority_score >= 50 ? ('Oui (' + $json.priority_score + ') — ' + ($json.priority_score>=80?'HIGH':'MED')) : 'Non' }}",
             "Commentaire": "={{$json.summary}}"
           }
@@ -128,7 +141,7 @@
       "name": "Write Back",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
-      "position": [ 2100, 260 ]
+      "position": [ 2250, 260 ]
     },
     {
       "parameters": {
@@ -140,7 +153,7 @@
       "name": "Keep Priority ≥50",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [ 2300, 260 ]
+      "position": [ 2450, 260 ]
     },
     {
       "parameters": {
@@ -151,7 +164,7 @@
       "name": "Telegram Notify",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [ 2500, 260 ]
+      "position": [ 2650, 260 ]
     }
   ],
   "connections": {
@@ -160,11 +173,12 @@
     "Stage 0 Pre-qual": { "main": [ [ { "node": "Keep Qualified", "type": "main", "index": 0 } ] ] },
     "Keep Qualified": { "main": [ [ { "node": "Collect URLs", "type": "main", "index": 0 } ], [] ] },
     "Collect URLs": { "main": [ [ { "node": "Stage 0.5 Marketplaces", "type": "main", "index": 0 } ] ] },
-    "Stage 0.5 Marketplaces": { "main": [ [ { "node": "Batch 10", "type": "main", "index": 0 } ] ] },
-    "Batch 10": { "main": [ [ { "node": "Stage 1 Activity", "type": "main", "index": 0 } ] ] },
-    "Stage 1 Activity": { "main": [ [ { "node": "Keep Candidates", "type": "main", "index": 0 } ] ] },
-    "Keep Candidates": { "main": [ [ { "node": "Stage 2 Traffic", "type": "main", "index": 0 } ], [] ] },
-    "Stage 2 Traffic": { "main": [ [ { "node": "Write Back", "type": "main", "index": 0 } ] ] },
+    "Stage 0.5 Marketplaces": { "main": [ [ { "node": "Stage 1 Activity", "type": "main", "index": 0 } ] ] },
+    "Stage 1 Activity": { "main": [ [ { "node": "Merge Marketplace + Activity", "type": "main", "index": 0 } ] ] },
+    "Merge Marketplace + Activity": { "main": [ [ { "node": "Keep Candidates or FOR_SALE", "type": "main", "index": 0 } ] ] },
+    "Keep Candidates or FOR_SALE": { "main": [ [ { "node": "Stage 2 Traffic", "type": "main", "index": 0 } ], [] ] },
+    "Stage 2 Traffic": { "main": [ [ { "node": "Flatten Traffic Response", "type": "main", "index": 0 } ] ] },
+    "Flatten Traffic Response": { "main": [ [ { "node": "Write Back", "type": "main", "index": 0 } ] ] },
     "Write Back": { "main": [ [ { "node": "Keep Priority ≥50", "type": "main", "index": 0 } ] ] },
     "Keep Priority ≥50": { "main": [ [ { "node": "Telegram Notify", "type": "main", "index": 0 } ], [] ] }
   },
