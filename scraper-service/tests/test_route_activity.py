@@ -3,6 +3,14 @@ from datetime import datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.routes.activity import _activity_cache
+
+
+@pytest.fixture(autouse=True)
+def _clear_activity_cache():
+    for f in _activity_cache.dir.glob("*.json"):
+        f.unlink(missing_ok=True)
+    yield
 
 
 @pytest.fixture

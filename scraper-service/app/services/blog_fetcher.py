@@ -12,8 +12,10 @@ COMMON_FEED_PATHS = [
     "/feed.xml", "/blog/feed/", "/actualites/feed",
 ]
 
-# Wall-clock cap for the whole cascade per URL; prevents one slow site from stalling the batch
-PER_URL_TIMEOUT_S = 25.0
+# Hard wall-clock cap per URL; one slow site can't stall the batch
+PER_URL_TIMEOUT_S = 12.0
+# Per-path fetch timeout; probes fire in parallel so this bounds the slowest probe
+PER_PATH_TIMEOUT_S = 4.0
 
 
 def _extract_feed_dates(content: str) -> Optional[list[datetime]]:
@@ -29,7 +31,7 @@ def _extract_feed_dates(content: str) -> Optional[list[datetime]]:
 
 
 async def _try_feed_path(base: str, path: str) -> Optional[list[datetime]]:
-    content = await fetch_with_retry(base + path)
+    content = await fetch_with_retry(base + path, timeout=PER_PATH_TIMEOUT_S)
     if not content:
         return None
     return _extract_feed_dates(content)
@@ -69,7 +71,7 @@ def _extract_sitemap_dates(text: str) -> Optional[list[datetime]]:
 
 
 async def _try_sitemap_path(base: str, path: str) -> Optional[list[datetime]]:
-    text = await fetch_with_retry(base + path)
+    text = await fetch_with_retry(base + path, timeout=PER_PATH_TIMEOUT_S)
     if not text:
         return None
     return _extract_sitemap_dates(text)
@@ -96,11 +98,7 @@ async def _cascade(base_url: str) -> Optional[list[datetime]]:
 
 
 async def fetch_post_dates(base_url: str) -> Optional[list[datetime]]:
-    """Return blog post dates, or None if unavailable or cascade exceeds PER_URL_TIMEOUT_S.
-
-    Sites that return None fall into the 'no blog → auto-CANDIDATE score 100' path
-    in the Stage 1 route (this is the desired signal — absent blog = neglected site).
-    """
+    """Return blog post dates, or None if unavailable or cascade exceeds PER_URL_TIMEOUT_S."""
     try:
         return await asyncio.wait_for(_cascade(base_url), timeout=PER_URL_TIMEOUT_S)
     except asyncio.TimeoutError:
