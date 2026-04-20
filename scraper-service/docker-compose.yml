@@ -1,0 +1,27 @@
+services:
+  scraper:
+    build: .
+    container_name: scraper-service
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./.cache:/app/.cache
+      - ./logs:/app/logs
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.scraper.rule=Host(`${SCRAPER_DOMAIN}`)"
+      - "traefik.http.routers.scraper.entrypoints=websecure"
+      - "traefik.http.routers.scraper.tls.certresolver=le"
+      - "traefik.http.services.scraper.loadbalancer.server.port=8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  web:
+    external: true
