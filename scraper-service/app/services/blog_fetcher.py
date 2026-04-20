@@ -84,3 +84,14 @@ async def get_post_dates_from_html(base_url: str) -> Optional[list[datetime]]:
                 if len(dates) >= 3:
                     return dates
     return None
+
+
+async def fetch_post_dates(base_url: str) -> Optional[list[datetime]]:
+    dates = await get_post_dates_from_feed(base_url)
+    if dates:
+        return dates
+    dates = await get_post_dates_from_sitemap(base_url)
+    if dates:
+        return dates
+    dates = await get_post_dates_from_html(base_url)
+    return dates
