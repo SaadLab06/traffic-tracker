@@ -13,8 +13,6 @@ RUN useradd -m -u 1000 scraper
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-RUN python -m playwright install --with-deps chromium \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY app ./app
 

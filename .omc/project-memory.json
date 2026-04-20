@@ -161,6 +161,12 @@
       "type": "file"
     },
     {
+      "path": "scraper-service\\Dockerfile",
+      "accessCount": 2,
+      "lastAccessed": 1776704621065,
+      "type": "file"
+    },
+    {
       "path": "scraper-service\\app\\services\\dotmarket_scraper.py",
       "accessCount": 1,
       "lastAccessed": 1776701925879,
@@ -255,12 +261,6 @@
       "accessCount": 1,
       "lastAccessed": 1776702510783,
       "type": "directory"
-    },
-    {
-      "path": "scraper-service\\Dockerfile",
-      "accessCount": 1,
-      "lastAccessed": 1776702765739,
-      "type": "file"
     },
     {
       "path": "C:\\Users\\LENOVO\\.claude\\projects\\e--projects-traffic-tracker\\memory\\bottleneck_misattribution.md",

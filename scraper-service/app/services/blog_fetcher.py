@@ -5,24 +5,6 @@ import re
 import feedparser
 from lxml import etree
 from app.utils.http import fetch_with_retry
-from app.utils.french_dates import extract_dates_from_html
-
-try:
-    from crawl4ai import AsyncWebCrawler
-except ImportError:
-    # Stub for environments without crawl4ai — production deploy must ensure it's installed.
-    class AsyncWebCrawler:  # type: ignore
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, *a):
-            return False
-
-        async def arun(self, url: str):
-            class _R:
-                success = False
-                cleaned_html = ""
-            return _R()
 
 COMMON_FEED_PATHS = [
     "/feed", "/rss", "/atom.xml", "/feed/", "/rss.xml",
@@ -55,7 +37,6 @@ async def _try_feed_path(base: str, path: str) -> Optional[list[datetime]]:
 
 async def get_post_dates_from_feed(base_url: str) -> Optional[list[datetime]]:
     base = base_url.rstrip("/")
-    # Fire all 11 feed probes concurrently; return the first non-empty result
     results = await asyncio.gather(
         *(_try_feed_path(base, p) for p in COMMON_FEED_PATHS),
         return_exceptions=True,
@@ -107,32 +88,19 @@ async def get_post_dates_from_sitemap(base_url: str) -> Optional[list[datetime]]
     return None
 
 
-BLOG_PATHS_HTML = ["/blog", "/actualites", "/news", "/magazine", "/blog/fr", "/fr/blog"]
-
-async def get_post_dates_from_html(base_url: str) -> Optional[list[datetime]]:
-    base = base_url.rstrip("/")
-    async with AsyncWebCrawler() as crawler:
-        for path in BLOG_PATHS_HTML:
-            result = await crawler.arun(url=f"{base}{path}")
-            if getattr(result, "success", False):
-                dates = extract_dates_from_html(result.cleaned_html or "")
-                if len(dates) >= 3:
-                    return dates
-    return None
-
-
 async def _cascade(base_url: str) -> Optional[list[datetime]]:
     dates = await get_post_dates_from_feed(base_url)
     if dates:
         return dates
-    dates = await get_post_dates_from_sitemap(base_url)
-    if dates:
-        return dates
-    return await get_post_dates_from_html(base_url)
+    return await get_post_dates_from_sitemap(base_url)
 
 
 async def fetch_post_dates(base_url: str) -> Optional[list[datetime]]:
-    """Return blog post dates, or None if unavailable or cascade exceeds PER_URL_TIMEOUT_S."""
+    """Return blog post dates, or None if unavailable or cascade exceeds PER_URL_TIMEOUT_S.
+
+    Sites that return None fall into the 'no blog → auto-CANDIDATE score 100' path
+    in the Stage 1 route (this is the desired signal — absent blog = neglected site).
+    """
     try:
         return await asyncio.wait_for(_cascade(base_url), timeout=PER_URL_TIMEOUT_S)
     except asyncio.TimeoutError:
