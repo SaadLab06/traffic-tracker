@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 
 from app.routes import activity
+from app.routes import marketplaces
 
 app = FastAPI(title="Acquisition Scraper Service")
 app.include_router(activity.router)
+app.include_router(marketplaces.router)
 
 
 @app.get("/health")
