@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, HttpUrl
 
 class CheckRequest(BaseModel):
     urls: list[str] = Field(..., min_length=1, max_length=200)
+    enrichment: dict[str, dict] | None = None
 
 class MarketplaceResult(BaseModel):
     url: str
