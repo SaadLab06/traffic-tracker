@@ -1,0 +1,279 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1776678992760,
+  "projectRoot": "e:\\projects\\traffic_tracker",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1776678992648,
+      "keyFiles": []
+    },
+    "n8n": {
+      "path": "n8n",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1776678992650,
+      "keyFiles": [
+        "README.md",
+        "workflow.json"
+      ]
+    },
+    "scraper-service": {
+      "path": "scraper-service",
+      "purpose": null,
+      "fileCount": 8,
+      "lastAccessed": 1776678992650,
+      "keyFiles": [
+        "docker-compose.yml",
+        "Dockerfile",
+        "pytest.ini",
+        "README.md",
+        "requirements.txt"
+      ]
+    },
+    "scraper-service\\app": {
+      "path": "scraper-service\\app",
+      "purpose": "Application code",
+      "fileCount": 2,
+      "lastAccessed": 1776678992651,
+      "keyFiles": [
+        "main.py",
+        "__init__.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": ".planning\\phases\\current\\PLAN.md",
+      "accessCount": 21,
+      "lastAccessed": 1776702775220,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\routes\\traffic.py",
+      "accessCount": 8,
+      "lastAccessed": 1776703327565,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\services\\flippa_scraper.py",
+      "accessCount": 7,
+      "lastAccessed": 1776702776637,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\routes\\marketplaces.py",
+      "accessCount": 6,
+      "lastAccessed": 1776702762356,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\services\\semrush_client.py",
+      "accessCount": 5,
+      "lastAccessed": 1776703327420,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\routes\\activity.py",
+      "accessCount": 5,
+      "lastAccessed": 1776703504320,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 4,
+      "lastAccessed": 1776702324283,
+      "type": "directory"
+    },
+    {
+      "path": "scraper-service",
+      "accessCount": 3,
+      "lastAccessed": 1776702381996,
+      "type": "directory"
+    },
+    {
+      "path": "n8n\\workflow.json",
+      "accessCount": 3,
+      "lastAccessed": 1776702765315,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\services\\blog_fetcher.py",
+      "accessCount": 3,
+      "lastAccessed": 1776703471269,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\models\\schemas.py",
+      "accessCount": 2,
+      "lastAccessed": 1776701992539,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\requirements.txt",
+      "accessCount": 2,
+      "lastAccessed": 1776702765646,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\docker-compose.yml",
+      "accessCount": 2,
+      "lastAccessed": 1776703293299,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\utils\\http.py",
+      "accessCount": 2,
+      "lastAccessed": 1776703319478,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\services\\dotmarket_scraper.py",
+      "accessCount": 1,
+      "lastAccessed": 1776701925879,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\services\\marketplace_matcher.py",
+      "accessCount": 1,
+      "lastAccessed": 1776701927450,
+      "type": "file"
+    },
+    {
+      "path": "docs\\plans\\2026-04-19-french-ecom-acquisition-pipeline.md",
+      "accessCount": 1,
+      "lastAccessed": 1776701932119,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\utils\\cache.py",
+      "accessCount": 1,
+      "lastAccessed": 1776701936153,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\tests\\test_route_marketplaces.py",
+      "accessCount": 1,
+      "lastAccessed": 1776701936728,
+      "type": "file"
+    },
+    {
+      "path": "n8n\\README.md",
+      "accessCount": 1,
+      "lastAccessed": 1776701938043,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\tests\\test_e2e_pipeline.py",
+      "accessCount": 1,
+      "lastAccessed": 1776701943393,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\services",
+      "accessCount": 1,
+      "lastAccessed": 1776701952037,
+      "type": "directory"
+    },
+    {
+      "path": "scraper-service\\app\\routes",
+      "accessCount": 1,
+      "lastAccessed": 1776701952528,
+      "type": "directory"
+    },
+    {
+      "path": "scraper-service\\app",
+      "accessCount": 1,
+      "lastAccessed": 1776701963068,
+      "type": "directory"
+    },
+    {
+      "path": "scraper-service\\app\\main.py",
+      "accessCount": 1,
+      "lastAccessed": 1776701980623,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\app\\utils\\logger.py",
+      "accessCount": 1,
+      "lastAccessed": 1776701981111,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\.env.example",
+      "accessCount": 1,
+      "lastAccessed": 1776702007747,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\tests\\test_http.py",
+      "accessCount": 1,
+      "lastAccessed": 1776702008008,
+      "type": "file"
+    },
+    {
+      "path": "scraper-service\\tests\\test_dotmarket_scraper.py",
+      "accessCount": 1,
+      "lastAccessed": 1776702008084,
+      "type": "file"
+    },
+    {
+      "path": "n8n",
+      "accessCount": 1,
+      "lastAccessed": 1776702510783,
+      "type": "directory"
+    },
+    {
+      "path": "scraper-service\\Dockerfile",
+      "accessCount": 1,
+      "lastAccessed": 1776702765739,
+      "type": "file"
+    },
+    {
+      "path": "C:\\Users\\LENOVO\\.claude\\projects\\e--projects-traffic-tracker\\memory\\bottleneck_misattribution.md",
+      "accessCount": 1,
+      "lastAccessed": 1776702890352,
+      "type": "file"
+    },
+    {
+      "path": "C:\\Users\\LENOVO\\.claude\\projects\\e--projects-traffic-tracker\\memory\\MEMORY.md",
+      "accessCount": 1,
+      "lastAccessed": 1776702896854,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

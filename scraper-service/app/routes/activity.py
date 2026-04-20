@@ -37,7 +37,7 @@ async def _process(url: str) -> dict:
             blog = analyze_blog_pattern(dates)
 
         domain = urlparse(url).hostname or ""
-        reviews = check_trustpilot_velocity(domain.removeprefix("www."))
+        reviews = await check_trustpilot_velocity(domain.removeprefix("www."))
         social = await check_social(url)
 
         if blog["blog_pattern"] == "none":

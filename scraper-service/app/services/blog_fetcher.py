@@ -32,7 +32,11 @@ COMMON_FEED_PATHS = [
 async def get_post_dates_from_feed(base_url: str) -> Optional[list[datetime]]:
     base = base_url.rstrip("/")
     for path in COMMON_FEED_PATHS:
-        feed = feedparser.parse(base + path)
+        # Fetch async (non-blocking, 10s timeout) then parse content string — feedparser.parse(str) does no I/O
+        content = await fetch_with_retry(base + path)
+        if not content:
+            continue
+        feed = feedparser.parse(content)
         if feed.entries and len(feed.entries) >= 3:
             dates = [
                 datetime(*e.published_parsed[:6])

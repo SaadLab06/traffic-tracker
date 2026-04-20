@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 try:
@@ -6,9 +7,12 @@ except ImportError:  # pragma: no cover
     def scrape_trustpilot_reviews(url: str):
         raise RuntimeError("trustpilot-scraper not installed")
 
-def check_trustpilot_velocity(domain: str) -> dict[str, Any]:
+async def check_trustpilot_velocity(domain: str) -> dict[str, Any]:
     try:
-        reviews = scrape_trustpilot_reviews(f"https://www.trustpilot.com/review/{domain}")
+        loop = asyncio.get_running_loop()
+        reviews = await loop.run_in_executor(
+            None, scrape_trustpilot_reviews, f"https://www.trustpilot.com/review/{domain}"
+        )
     except Exception:
         return {"trustpilot_found": False, "recent_reviews_14d": 0, "recent_reviews_30d": 0}
 
