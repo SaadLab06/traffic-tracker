@@ -17,7 +17,7 @@ from app.utils.logger import get_logger
 router = APIRouter()
 log = get_logger(__name__)
 
-MAX_CONCURRENCY = 5
+MAX_CONCURRENCY = 20
 
 
 async def _process(url: str) -> dict:

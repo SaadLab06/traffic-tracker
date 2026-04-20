@@ -101,15 +101,15 @@
       "type": "file"
     },
     {
-      "path": "scraper-service\\app\\services\\semrush_client.py",
-      "accessCount": 5,
-      "lastAccessed": 1776703327420,
+      "path": "scraper-service\\app\\routes\\activity.py",
+      "accessCount": 6,
+      "lastAccessed": 1776704119254,
       "type": "file"
     },
     {
-      "path": "scraper-service\\app\\routes\\activity.py",
+      "path": "scraper-service\\app\\services\\semrush_client.py",
       "accessCount": 5,
-      "lastAccessed": 1776703504320,
+      "lastAccessed": 1776703327420,
       "type": "file"
     },
     {
