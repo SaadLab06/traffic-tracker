@@ -157,6 +157,25 @@
     },
     {
       "parameters": {
+        "documentId": { "__rl": true, "mode": "list", "value": "SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "Sheet1" },
+        "operation": "update",
+        "columns": { "mappingMode": "defineBelow",
+          "value": {
+            "Site web": "={{$json.url}}",
+            "Statut scraping": "={{ 'S1: ELIMINATED (' + $json.stage1_score + ')' }}",
+            "Commentaire": "={{$json.summary}}"
+          }
+        }
+      },
+      "id": "n-write-eliminated",
+      "name": "Write Eliminated",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [ 1900, 400 ]
+    },
+    {
+      "parameters": {
         "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
         "text": "=Top candidate: {{$json.url}}\nScore: {{$json.priority_score}} — {{$json.stage2_verdict}}\n{{$json.summary}}"
       },
@@ -176,7 +195,7 @@
     "Stage 0.5 Marketplaces": { "main": [ [ { "node": "Stage 1 Activity", "type": "main", "index": 0 } ] ] },
     "Stage 1 Activity": { "main": [ [ { "node": "Merge Marketplace + Activity", "type": "main", "index": 0 } ] ] },
     "Merge Marketplace + Activity": { "main": [ [ { "node": "Keep Candidates or FOR_SALE", "type": "main", "index": 0 } ] ] },
-    "Keep Candidates or FOR_SALE": { "main": [ [ { "node": "Stage 2 Traffic", "type": "main", "index": 0 } ], [] ] },
+    "Keep Candidates or FOR_SALE": { "main": [ [ { "node": "Stage 2 Traffic", "type": "main", "index": 0 } ], [ { "node": "Write Eliminated", "type": "main", "index": 0 } ] ] },
     "Stage 2 Traffic": { "main": [ [ { "node": "Flatten Traffic Response", "type": "main", "index": 0 } ] ] },
     "Flatten Traffic Response": { "main": [ [ { "node": "Write Back", "type": "main", "index": 0 } ] ] },
     "Write Back": { "main": [ [ { "node": "Keep Priority ≥50", "type": "main", "index": 0 } ] ] },

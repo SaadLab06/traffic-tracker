@@ -3,14 +3,18 @@ from app.models.schemas import CheckRequest, MarketplaceResult
 from app.services.dotmarket_scraper import fetch_dotmarket_listings
 from app.services.flippa_scraper import fetch_flippa_listings
 from app.services.marketplace_matcher import match_url_to_listings
+from app.utils.logger import get_logger
 
 router = APIRouter()
+log = get_logger(__name__)
 
 
 @router.post("/check-marketplaces", response_model=list[MarketplaceResult])
 async def check_marketplaces(req: CheckRequest):
     dm_listings = await fetch_dotmarket_listings()
     fl_listings = await fetch_flippa_listings()
+    if not dm_listings and not fl_listings:
+        log.warning("both marketplace catalogs empty — all URLs will be NOT_LISTED", extra={"stage": "0.5"})
     out: list[MarketplaceResult] = []
     for url in req.urls:
         dm = match_url_to_listings(url, dm_listings)

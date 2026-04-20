@@ -40,16 +40,13 @@ async def _process(url: str) -> dict:
         reviews = check_trustpilot_velocity(domain.removeprefix("www."))
         social = await check_social(url)
 
-        score = compute_stage1_score(blog, reviews, social)
-        if blog["blog_pattern"] != "none" or reviews["recent_reviews_30d"] > 0:
-            verdict = stage1_verdict(score)
-        else:
-            verdict = "CANDIDATE"
-
-        # If truly no blog → spec says auto-CANDIDATE with score=100
         if blog["blog_pattern"] == "none":
+            # Spec §8.1 step 4: no blog → auto-CANDIDATE with score 100
             score = 100
             verdict = "CANDIDATE"
+        else:
+            score = compute_stage1_score(blog, reviews, social)
+            verdict = stage1_verdict(score)
 
         summary_bits: list[str] = []
         if blog["blog_pattern"] == "none":

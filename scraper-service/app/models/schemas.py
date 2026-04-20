@@ -1,5 +1,5 @@
 from typing import Literal, Optional
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 class CheckRequest(BaseModel):
     urls: list[str] = Field(..., min_length=1, max_length=200)
