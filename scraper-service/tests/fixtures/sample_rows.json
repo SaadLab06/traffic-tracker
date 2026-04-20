@@ -1,0 +1,27 @@
+[
+  {
+    "Nom": "DUVERGER CBD", "Types": "Boutique Physique, Ecommerce",
+    "Site web": "https://duverger-nb.com", "Note Google": 4.8, "Nb Avis": 170,
+    "Statut scraping": ""
+  },
+  {
+    "Nom": "CBD Dormant", "Types": "Ecommerce",
+    "Site web": "https://dormant-cbd.fr", "Note Google": 4.2, "Nb Avis": 35,
+    "Statut scraping": ""
+  },
+  {
+    "Nom": "Obviously Healthy", "Types": "Ecommerce",
+    "Site web": "https://big-cbd.fr", "Note Google": 4.9, "Nb Avis": 1200,
+    "Statut scraping": ""
+  },
+  {
+    "Nom": "Physical Only", "Types": "Boutique Physique",
+    "Site web": "https://shop-only.fr", "Note Google": 4.5, "Nb Avis": 80,
+    "Statut scraping": ""
+  },
+  {
+    "Nom": "No Website", "Types": "Ecommerce",
+    "Site web": "", "Note Google": 4.0, "Nb Avis": 10,
+    "Statut scraping": ""
+  }
+]
