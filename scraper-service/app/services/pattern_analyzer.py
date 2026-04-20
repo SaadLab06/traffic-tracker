@@ -37,7 +37,8 @@ def analyze_blog_pattern(post_dates: list[datetime]) -> dict[str, Any]:
     signal = gaps.reshape(-1, 1)
     try:
         algo = rpt.Pelt(model="rbf").fit(signal)
-        change_points = [cp for cp in algo.predict(pen=10) if cp < len(signal)]
+        # pen tuned to 2 on ruptures 1.0.6 — see tests/test_pattern_analyzer_pelt.py
+        change_points = [cp for cp in algo.predict(pen=2) if cp < len(signal)]
     except Exception:
         change_points = []
 
