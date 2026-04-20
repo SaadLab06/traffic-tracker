@@ -4,6 +4,24 @@ import re
 import feedparser
 from lxml import etree
 from app.utils.http import fetch_with_retry
+from app.utils.french_dates import extract_dates_from_html
+
+try:
+    from crawl4ai import AsyncWebCrawler
+except ImportError:
+    # Stub for environments without crawl4ai — production deploy must ensure it's installed.
+    class AsyncWebCrawler:  # type: ignore
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def arun(self, url: str):
+            class _R:
+                success = False
+                cleaned_html = ""
+            return _R()
 
 COMMON_FEED_PATHS = [
     "/feed", "/rss", "/atom.xml", "/feed/", "/rss.xml",
@@ -51,4 +69,18 @@ async def get_post_dates_from_sitemap(base_url: str) -> Optional[list[datetime]]
                     continue
         if len(dates) >= 3:
             return dates
+    return None
+
+
+BLOG_PATHS_HTML = ["/blog", "/actualites", "/news", "/magazine", "/blog/fr", "/fr/blog"]
+
+async def get_post_dates_from_html(base_url: str) -> Optional[list[datetime]]:
+    base = base_url.rstrip("/")
+    async with AsyncWebCrawler() as crawler:
+        for path in BLOG_PATHS_HTML:
+            result = await crawler.arun(url=f"{base}{path}")
+            if getattr(result, "success", False):
+                dates = extract_dates_from_html(result.cleaned_html or "")
+                if len(dates) >= 3:
+                    return dates
     return None
