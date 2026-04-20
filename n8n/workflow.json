@@ -1,0 +1,172 @@
+{
+  "name": "FR Ecom Acquisition Pipeline",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [ { "field": "hours", "hoursInterval": 24 } ] } },
+      "id": "n-schedule",
+      "name": "Nightly 02:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [ 100, 300 ]
+    },
+    {
+      "parameters": {
+        "documentId": { "__rl": true, "mode": "list", "value": "SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "Sheet1" }
+      },
+      "id": "n-read",
+      "name": "Read Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [ 300, 300 ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst seen = new Set();\nreturn rows.map(row => {\n  const d = row.json;\n  const types = (d['Types']||'').toLowerCase();\n  const statut = (d['Statut scraping']||'').trim();\n  const site = (d['Site web']||'').trim();\n  const avis = parseInt(d['Nb Avis'])||0;\n  const note = parseFloat(d['Note Google'])||0;\n  let domain = null;\n  try { domain = new URL(site).hostname.replace(/^www\\./,''); } catch {}\n  if (statut && !statut.startsWith('S0:')) return { json: { ...d, skip:true, reason:'already processed' } };\n  if (!types.includes('ecommerce')) return { json: { ...d, skip:true, reason:'physical only' } };\n  if (!site || !site.startsWith('http') || !domain) return { json: { ...d, skip:true, reason:'no website' } };\n  if (avis > 500 && note > 4.5) return { json: { ...d, skip:true, reason:'obviously healthy' } };\n  if (seen.has(domain)) return { json: { ...d, skip:true, reason:'duplicate domain' } };\n  seen.add(domain);\n  return { json: { ...d, skip:false, domain, reason:'qualified' } };\n});"
+      },
+      "id": "n-stage0",
+      "name": "Stage 0 Pre-qual",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 500, 300 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "conditions": [ { "leftValue": "={{$json.skip}}", "rightValue": false, "operator": { "type": "boolean", "operation": "equals" } } ] }
+      },
+      "id": "n-filter0",
+      "name": "Keep Qualified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 700, 300 ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateIndividualFields",
+        "fieldsToAggregate": { "fieldToAggregate": [ { "fieldToAggregate": "={{$json['Site web']}}", "renameField": "urls" } ] }
+      },
+      "id": "n-aggregate",
+      "name": "Collect URLs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [ 900, 260 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SCRAPER_BASE}}/check-marketplaces",
+        "sendBody": true, "contentType": "json",
+        "jsonBody": "={\n  \"urls\": {{$json.urls}}\n}"
+      },
+      "id": "n-market",
+      "name": "Stage 0.5 Marketplaces",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1100, 260 ]
+    },
+    {
+      "parameters": { "batchSize": 10 },
+      "id": "n-split",
+      "name": "Batch 10",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [ 1300, 260 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SCRAPER_BASE}}/check-activity",
+        "sendBody": true, "contentType": "json",
+        "jsonBody": "={\n  \"urls\": {{$json.urls}}\n}"
+      },
+      "id": "n-activity",
+      "name": "Stage 1 Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1500, 260 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "conditions": [
+          { "leftValue": "={{$json.stage1_verdict}}", "rightValue": "CANDIDATE", "operator": { "type": "string", "operation": "equals" } }
+        ] }
+      },
+      "id": "n-filter1",
+      "name": "Keep Candidates",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1700, 260 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SCRAPER_BASE}}/check-traffic",
+        "sendBody": true, "contentType": "json",
+        "jsonBody": "={\n  \"urls\": [{{$json.url}}],\n  \"enrichment\": {\n    \"{{$json.url}}\": {\n      \"stage1_score\": {{$json.stage1_score}},\n      \"marketplace_verdict\": \"{{$json.marketplace_verdict || 'NOT_LISTED'}}\"\n    }\n  }\n}"
+      },
+      "id": "n-traffic",
+      "name": "Stage 2 Traffic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1900, 260 ]
+    },
+    {
+      "parameters": {
+        "documentId": { "__rl": true, "mode": "list", "value": "SHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "Sheet1" },
+        "operation": "update",
+        "columns": { "mappingMode": "defineBelow",
+          "value": {
+            "Site web": "={{$json.url}}",
+            "Statut scraping": "={{ $json.stage1_verdict === 'ERROR' ? ('ERROR: ' + ($json.error || 'unknown')) : ('S1: ' + $json.stage1_verdict + ' (' + $json.stage1_score + ')') }}",
+            "Check Semrush (intéressant pour racheter?)": "={{ $json.priority_score >= 50 ? ('Oui (' + $json.priority_score + ') — ' + ($json.priority_score>=80?'HIGH':'MED')) : 'Non' }}",
+            "Commentaire": "={{$json.summary}}"
+          }
+        }
+      },
+      "id": "n-write",
+      "name": "Write Back",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [ 2100, 260 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "conditions": [
+          { "leftValue": "={{$json.priority_score}}", "rightValue": 50, "operator": { "type": "number", "operation": "gte" } }
+        ] }
+      },
+      "id": "n-filter2",
+      "name": "Keep Priority ≥50",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 2300, 260 ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "=Top candidate: {{$json.url}}\nScore: {{$json.priority_score}} — {{$json.stage2_verdict}}\n{{$json.summary}}"
+      },
+      "id": "n-telegram",
+      "name": "Telegram Notify",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [ 2500, 260 ]
+    }
+  ],
+  "connections": {
+    "Nightly 02:00": { "main": [ [ { "node": "Read Sheet", "type": "main", "index": 0 } ] ] },
+    "Read Sheet": { "main": [ [ { "node": "Stage 0 Pre-qual", "type": "main", "index": 0 } ] ] },
+    "Stage 0 Pre-qual": { "main": [ [ { "node": "Keep Qualified", "type": "main", "index": 0 } ] ] },
+    "Keep Qualified": { "main": [ [ { "node": "Collect URLs", "type": "main", "index": 0 } ], [] ] },
+    "Collect URLs": { "main": [ [ { "node": "Stage 0.5 Marketplaces", "type": "main", "index": 0 } ] ] },
+    "Stage 0.5 Marketplaces": { "main": [ [ { "node": "Batch 10", "type": "main", "index": 0 } ] ] },
+    "Batch 10": { "main": [ [ { "node": "Stage 1 Activity", "type": "main", "index": 0 } ] ] },
+    "Stage 1 Activity": { "main": [ [ { "node": "Keep Candidates", "type": "main", "index": 0 } ] ] },
+    "Keep Candidates": { "main": [ [ { "node": "Stage 2 Traffic", "type": "main", "index": 0 } ], [] ] },
+    "Stage 2 Traffic": { "main": [ [ { "node": "Write Back", "type": "main", "index": 0 } ] ] },
+    "Write Back": { "main": [ [ { "node": "Keep Priority ≥50", "type": "main", "index": 0 } ] ] },
+    "Keep Priority ≥50": { "main": [ [ { "node": "Telegram Notify", "type": "main", "index": 0 } ], [] ] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
