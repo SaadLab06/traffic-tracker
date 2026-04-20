@@ -9,6 +9,7 @@ services:
       - ./logs:/app/logs
     networks:
       - web
+      - n8n_net
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
@@ -23,5 +24,8 @@ services:
       retries: 3
 
 networks:
+  n8n_net:
+    name: root_default
+    external: true
   web:
     external: true
