@@ -65,3 +65,22 @@ def analyze_blog_pattern(post_dates: list[datetime]) -> dict[str, Any]:
         "pattern_broken": pattern_broken,
         "stage1_score_contrib": 40 if pattern_broken else 0,
     }
+
+
+def compute_stage1_score(blog_data: dict, review_data: dict, social_data: dict | None) -> int:
+    score = 0
+    score += blog_data.get("stage1_score_contrib", 0)
+    if blog_data.get("blog_pattern") == "none":
+        score += 35
+    r30 = review_data.get("recent_reviews_30d", 0)
+    if r30 == 0:
+        score += 20
+    elif r30 <= 2:
+        score += 10
+    if social_data and social_data.get("social_active") is False:
+        score += 15
+    return min(100, score)
+
+
+def stage1_verdict(score: int) -> str:
+    return "CANDIDATE" if score >= 40 else "ELIMINATED"
